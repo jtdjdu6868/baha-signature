@@ -47,7 +47,7 @@ function getCwbWeather(locationName, time) {
 }
 
 router.get("/", (req, res) => {
-	const clientIP = req.headers["x-forwarded-for"];
+	const clientIP = req.headers["x-forwarded-for"].split(", ")[0];
 	fetch(`http://ip-api.com/json/${clientIP}?fields=36955103`, {}).then((response) => {
 		return response.json();
 	}).then((jsonData) => {

@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.get("/", (req, res) => {
 	const clock_images = require("./clock_image.js");
-	const clientIP = req.headers["x-forwarded-for"];
+	const clientIP = req.headers["x-forwarded-for"].split(", ")[0];
 	fetch(`http://ip-api.com/json/${clientIP}?fields=33611776`, {}).then((response) => {
 		return response.json();
 	}).then((jsonGeolocation) => {
