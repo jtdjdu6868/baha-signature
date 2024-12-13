@@ -1,0 +1,17 @@
+{
+  "name": "express_server",
+  "version": "1.0.0",
+  "description": "express.js server for nginx",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.13"
+  }
+}
