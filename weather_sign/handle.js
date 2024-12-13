@@ -5,12 +5,12 @@ const router = express.Router();
 const fetch = require("node-fetch");
 let cwbCache = new Map();
 function updateCwbCache() {
-	const apiUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-089?Authorization=${process.env.CWA_TOKEN}&format=JSON&locationName=&elementName=Wx,T,RH,PoP6h&sort=time`;
+	const apiUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-089?Authorization=${process.env.CWA_TOKEN}&format=JSON&LocationName=&elementName=%E9%99%8D%E9%9B%A8%E6%A9%9F%E7%8E%87,%E6%BA%AB%E5%BA%A6,%E5%A4%A9%E6%B0%A3%E7%8F%BE%E8%B1%A1,%E7%9B%B8%E5%B0%8D%E6%BF%95%E5%BA%A6&sort=time`;
 	return fetch(apiUrl, {}).then((response) => {
 		return response.json();
 	}).then((jsonData) => {
-		jsonData.records.locations[0].location.forEach((loc) => {
-			cwbCache[loc.locationName] = loc.weatherElement;
+		jsonData.records.Locations[0].Location.forEach((loc) => {
+			cwbCache[loc.LocationName] = loc.WeatherElement;
 			// console.log(cwbCache);
 		});
 	});
@@ -32,20 +32,30 @@ function getCwbWeather(locationName, time) {
 	}
 	const now = new Date();
 	now.setHours(now.getHours() + 8);
+	// region contains series of weather elements in boundary of time
 	let data = region.reduce((obj, weatherElement, index) => {
-		if(weatherElement.time[0].dataTime !== undefined)
+		// time may be in one point or in range
+		if(weatherElement.Time[0].DataTime !== undefined)	// if time is one point
 		{
-			obj[weatherElement.elementName] = weatherElement.time.filter((timeElement) => new Date(timeElement.dataTime) < now).at(-1) || weatherElement.time[0];
+			// get nearest time, or oldest time
+			obj[weatherElement.ElementName] = weatherElement.Time.filter((timeElement) => new Date(timeElement.DataTime) < now).at(-1) || weatherElement.Time[0];
 		}
-		else
+		else	// if time is a range
 		{
-			obj[weatherElement.elementName] = (weatherElement.time.find((timeElement) => new Date(timeElement.startTime) <= now && new Date(timeElement.endTime) > now) || weatherElement.time[0]);
+			obj[weatherElement.ElementName] = (weatherElement.Time.find((timeElement) => new Date(timeElement.StartTime) <= now && new Date(timeElement.EndTime) > now) || weatherElement.Time[0]);
 		}
 		return obj;
 	}, {});
 	return data;
 }
 
+// disguesting keys
+const CWAAPIKeys = {
+	Wx: "天氣現象",
+	T: "溫度",
+	RH: "相對濕度",
+	PoP3h: "3小時降雨機率",
+}
 router.get("/", (req, res) => {
 	const clientIP = req.headers["x-forwarded-for"].split(", ")[0];
 	fetch(`http://ip-api.com/json/${clientIP}?fields=36955103`, {}).then((response) => {
@@ -57,7 +67,7 @@ router.get("/", (req, res) => {
 				const iso3116tw = require("./iso3116tw.js");
 				const regionName = iso3116tw[jsonData.region];
 				const weatherData = getCwbWeather(regionName, 0);
-				const WxCode = parseInt(weatherData.Wx.elementValue[1].value);
+				const WxCode = parseInt(weatherData[CWAAPIKeys.Wx].ElementValue[0].WeatherCode);
 				const now = new Date();
 				now.setHours(now.getHours() + 8);
 				let iconSet;
@@ -71,10 +81,10 @@ router.get("/", (req, res) => {
 				}
 				const iconUrl = iconSet[WxCode];
 				const response = {
-					Wx: weatherData.Wx.elementValue[0].value,
-					T: weatherData.T.elementValue[0].value,
-					RH: weatherData.RH.elementValue[0].value,
-					PoP: weatherData.PoP6h.elementValue[0].value,
+					Wx: weatherData[CWAAPIKeys.Wx].ElementValue[0].Weather,
+					T: weatherData[CWAAPIKeys.T].ElementValue[0].Temperature,
+					RH: weatherData[CWAAPIKeys.RH].ElementValue[0].RelativeHumidity,
+					PoP: weatherData[CWAAPIKeys.PoP3h].ElementValue[0].ProbabilityOfPrecipitation,
 					imageUrl: iconUrl,
 					location: regionName,
 				};
