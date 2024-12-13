@@ -68,8 +68,8 @@ router.get("/", (req, res) => {
 				const regionName = iso3116tw[jsonData.region];
 				const weatherData = getCwbWeather(regionName, 0);
 				const WxCode = parseInt(weatherData[CWAAPIKeys.Wx].ElementValue[0].WeatherCode);
-				const now = new Date();
-				now.setHours(now.getHours() + 8);
+				const now = new Date(new Date().toUTCString());
+				now.setSeconds(now.getSeconds() + jsonData.offset);
 				let iconSet;
 				if(now.getHours() < 5 || now.getHours() >= 18)
 				{
