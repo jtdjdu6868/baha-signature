@@ -2,7 +2,7 @@
 目前做兩個給自己人用。
 
 ## 天氣簽名檔
-![Weather Sign](https://js.jtdjdu6868.com/sign/weather_sign.png)
+![Weather Sign](https://js.jtdjdu6868.com/sign/weather_sign.svg)
 
 ### 參考資料
 - 中央氣象局
@@ -12,7 +12,7 @@
   - https://www.weatherapi.com/
 
 ## 好棒三點了
-![oh boy 3am](https://js.jtdjdu6868.com/sign/ohboy3am_sign.png)
+![oh boy 3am](https://js.jtdjdu6868.com/sign/ohboy3am_sign.svg)
 
 ### 參考資料
 - 時區查詢
