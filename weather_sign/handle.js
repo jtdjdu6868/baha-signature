@@ -123,8 +123,8 @@ router.get("/", (req, res) => {
 			responseText += `<image xlink:href="${weatherData.imageUrl}" height="70" y="27.5" x="27.5"></image>`;
 			responseText += `<text x="160" y="60" style="font-size: ${weatherData.location.length > 3 ? "35" : "40"}px; font-weight: bold">${weatherData.location}</text>`;
 			responseText += `<text x="160" y="92">${weatherData.Wx}</text>`;
-			responseText += `<text x="340" y="92">${weatherData.T}°C / ${weatherData.RH}%</text>`;
-			responseText += `<text x="340" y="60">降雨機率 ${weatherData.PoP}%</text>`;
+			responseText += `<text x="400" y="92">${weatherData.T}°C / ${weatherData.RH}%</text>`;
+			responseText += `<text x="400" y="60">降雨機率 ${weatherData.PoP}%</text>`;
 			responseText += `<text x="660" y="125" text-anchor="end" dominant-baseline="text-after-edge" style="font-size: 10pt; fill: #f7f7f7">jtdjdu6868（晴空和聲）</text>`;
 			responseText += `</svg>`;
 			res.send(responseText);
