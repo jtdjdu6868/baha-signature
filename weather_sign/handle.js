@@ -4,6 +4,7 @@ const router = express.Router();
 // daemon
 const fetch = require("node-fetch");
 let cwbCache = new Map();
+let isCwbCacheReady = false;
 function updateCwbCache() {
 	const apiUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-089?Authorization=${process.env.CWA_TOKEN}&format=JSON&LocationName=&elementName=%E9%99%8D%E9%9B%A8%E6%A9%9F%E7%8E%87,%E6%BA%AB%E5%BA%A6,%E5%A4%A9%E6%B0%A3%E7%8F%BE%E8%B1%A1,%E7%9B%B8%E5%B0%8D%E6%BF%95%E5%BA%A6&sort=time`;
 	return fetch(apiUrl, {}).then((response) => {
@@ -13,6 +14,11 @@ function updateCwbCache() {
 			cwbCache[loc.LocationName] = loc.WeatherElement;
 			// console.log(cwbCache);
 		});
+		isCwbCacheReady = true;
+	}).catch((e) => {
+		console.error("cwb error");
+		console.error(e);
+		isCwbCacheReady = false;
 	});
 }
 updateCwbCache().then(() => console.log("cwb initialized")); // .then(() => console.log(getCwbWeather("桃園市", 0)));
@@ -49,6 +55,13 @@ function getCwbWeather(locationName, time) {
 	return data;
 }
 
+class CWAError extends Error {
+	constructor(message) {
+		super(message);
+		this.name = "CWAError";
+	}
+}
+
 // disguesting keys
 const CWAAPIKeys = {
 	Wx: "天氣現象",
@@ -62,10 +75,15 @@ router.get("/", (req, res) => {
 		return response.json();
 	}).then((jsonData) => {
 		new Promise((resolve, reject) => {
-			if(jsonData.countryCode === "TW" && jsonData.region !== "" && true)
+			if(jsonData.countryCode === "TW" && jsonData.region !== "")
 			{
 				const iso3116tw = require("./iso3116tw.js");
 				const regionName = iso3116tw[jsonData.region];
+				if(!isCwbCacheReady)
+				{
+					reject(new CWAError(`CWA cache is not ready yet, can not get weather data for ${regionName}`));
+					return;
+				}
 				const weatherData = getCwbWeather(regionName, 0);
 				const WxCode = parseInt(weatherData[CWAAPIKeys.Wx].ElementValue[0].WeatherCode);
 				const now = new Date(new Date().toUTCString());
@@ -130,6 +148,17 @@ router.get("/", (req, res) => {
 			res.send(responseText);
 		}).catch((e) => {
 			console.log(e);
+			let responseText = `<svg xmlns="http://www.w3.org/2000/svg" version="1.2" viewBox="0 0 660 125" style="user-select: none; font-family: 'Roboto','Segoe UI','Arial','Microsoft Jhenghei','sans-serif'; font-size: 20px; background-color: white;" xmlns:xlink="http://www.w3.org/1999/xlink">`;
+			if(e instanceof CWAError)
+			{
+				responseText += `<text x="0" y="20" style="font-size: 12px; font-weight: bold">${e}</text>`;
+			}
+			else
+			{
+				responseText += `<text x="0" y="20" style="font-size: 12px; font-weight: bold">Something went wrong :((</text>`;
+			}
+			responseText += `</svg>`;
+			res.send(responseText);
 		});
 	});
 });
